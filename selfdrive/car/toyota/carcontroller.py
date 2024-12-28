@@ -211,8 +211,9 @@ class CarController(CarControllerBase):
       pedal_command = PEDAL_SCALE * (actuators.accel + pedal_offset)
       interceptor_gas_cmd = clip(pedal_command, 0., MAX_INTERCEPTOR_GAS)
     # FSRDRCC SnG logic
-    elif self.CP.enableGasInterceptor and self.CP.openpilotLongitudinalControl and self.CP.carFingerprint in FULL_SPEED_DRCC_CAR and actuators.accel > 0. and CS.out.standstill and CS.pcm_acc_status == 7:
-      interceptor_gas_cmd = 0.14
+    elif ((CC.longActive and actuators.accel > 0.) or (not self.CP.openpilotLongitudinalControl and CS.stock_resume_ready)) \
+      and self.CP.carFingerprint in STOP_AND_GO_CAR and self.CP.enableGasInterceptor and CS.out.vEgo < 1e-3:
+      interceptor_gas_cmd = 0.12
     else:
       interceptor_gas_cmd = 0.
     pcm_accel_cmd = clip(actuators.accel, self.params.ACCEL_MIN, self.params.ACCEL_MAX)
