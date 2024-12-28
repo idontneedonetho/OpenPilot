@@ -606,5 +606,8 @@ ANGLE_CONTROL_CAR = CAR.with_flags(ToyotaFlags.ANGLE_CONTROL)
 # no resume button press required
 NO_STOP_TIMER_CAR = CAR.with_flags(ToyotaFlags.NO_STOP_TIMER)
 
+# Full-Speed Dynamic RADAR Cruise Control Cars
+FULL_SPEED_DRCC_CAR = {CAR.PRIUS, CAR.LEXUS_CTH, CAR.LEXUS_NX, CAR.LEXUS_NXH, CAR.LEXUS_RX, CAR.LEXUS_RXH}
+
 CAR_INFO = CAR.create_carinfo_map()
 DBC = CAR.create_dbc_map()
