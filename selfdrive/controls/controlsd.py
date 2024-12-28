@@ -289,6 +289,8 @@ class Controls:
       self.events.add(EventName.outOfSpace)
     if self.sm['deviceState'].memoryUsagePercent > 90 and not SIMULATION:
       self.events.add(EventName.lowMemory)
+    if self.sm.frame * DT_CTRL == 5.5 and self.CP.lateralTuning.which() == "torque" and self.CI.use_nnff:
+      self.events.add(EventName.torqueNNLoad)
 
     # TODO: enable this once loggerd CPU usage is more reasonable
     #cpus = list(self.sm['deviceState'].cpuUsagePercent)
@@ -676,7 +678,8 @@ class Controls:
       actuators.curvature = self.desired_curvature
       actuators.steer, actuators.steeringAngleDeg, lac_log = self.LaC.update(CC.latActive, CS, self.VM, lp,
                                                                              self.steer_limited, self.desired_curvature,
-                                                                             self.sm['liveLocationKalman'])
+                                                                             self.sm['liveLocationKalman'],
+                                                                             model_data=self.sm['modelV2'])
     else:
       lac_log = log.ControlsState.LateralDebugState.new_message()
       if self.sm.recv_frame['testJoystick'] > 0:
