@@ -6,7 +6,7 @@ from openpilot.selfdrive.car.interfaces import CarControllerBase
 from openpilot.selfdrive.car.toyota import toyotacan
 from openpilot.selfdrive.car.toyota.values import CAR, STATIC_DSU_MSGS, NO_STOP_TIMER_CAR, TSS2_CAR, \
                                         MIN_ACC_SPEED, PEDAL_TRANSITION, CarControllerParams, ToyotaFlags, \
-                                        UNSUPPORTED_DSU_CAR, FULL_SPEED_DRCC_CAR
+                                        UNSUPPORTED_DSU_CAR, STOP_AND_GO_CAR
 from opendbc.can.packer import CANPacker
 from common.conversions import Conversions as CV
 from openpilot.common.params import Params
