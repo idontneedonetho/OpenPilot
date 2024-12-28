@@ -170,7 +170,7 @@ class CarInterface(CarInterfaceBase):
     tune = ret.longitudinalTuning
     tune.deadzoneBP = [0., 16., 20., 30.] if dp_toyota_enhanced_long_tune else [0., 9.]
     tune.deadzoneV =  [0., .03, .06, .15] if dp_toyota_enhanced_long_tune else [.0, .15]
-    if candidate in TSS2_CAR or ret.enableGasInterceptor and not candidate in FULL_SPEED_DRCC_CAR:
+    if candidate in TSS2_CAR or ret.enableGasInterceptor:
       tune.kpBP = [0., 5., 20.]
       tune.kpV = [1.3, 1.0, 0.7]
       tune.kiBP = [ 0.,     2.,    6.,    20.,  27.,  40.] if dp_toyota_enhanced_long_tune else [0., 5., 12., 20., 27.]
