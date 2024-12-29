@@ -42,40 +42,15 @@ class CarInterface(CarInterfaceBase):
 
     ret.stoppingControl = False  # Toyota starts braking more when it thinks you want to stop
 
-    stop_and_go = candidate in TSS2_CAR
-
     if candidate == CAR.PRIUS:
-      stop_and_go = True
       # Only give steer angle deadzone to for bad angle sensor prius
       for fw in car_fw:
         if fw.ecu == "eps" and not fw.fwVersion == b'8965B47060\x00\x00\x00\x00\x00\x00':
           ret.steerActuatorDelay = 0.25
           CarInterfaceBase.configure_torque_tune(candidate, ret.lateralTuning, steering_angle_deadzone_deg=0.2)
 
-    elif candidate == CAR.PRIUS_V:
-      stop_and_go = True
-
-    elif candidate in (CAR.RAV4, CAR.RAV4H):
-      stop_and_go = True if (candidate in CAR.RAV4H) else False
-
     elif candidate in (CAR.LEXUS_RX, CAR.LEXUS_RX_TSS2):
-      stop_and_go = True
       ret.wheelSpeedFactor = 1.035
-
-    elif candidate in (CAR.CHR, CAR.CHR_TSS2):
-      stop_and_go = True
-
-    elif candidate in (CAR.CAMRY, CAR.CAMRY_TSS2):
-      stop_and_go = True
-
-    elif candidate in (CAR.HIGHLANDER, CAR.HIGHLANDER_TSS2):
-      # TODO: TSS-P models can do stop and go, but unclear if it requires sDSU or unplugging DSU
-      stop_and_go = True
-
-    elif candidate in (CAR.AVALON, CAR.AVALON_2019, CAR.AVALON_TSS2):
-      # starting from 2019, all Avalon variants have stop and go
-      # https://engage.toyota.com/static/images/toyota_safety_sense/TSS_Applicability_Chart.pdf
-      stop_and_go = candidate != CAR.AVALON
 
     elif candidate in (CAR.RAV4_TSS2, CAR.RAV4_TSS2_2022, CAR.RAV4_TSS2_2023):
       ret.lateralTuning.init('pid')
@@ -93,18 +68,6 @@ class CarInterface(CarInterfaceBase):
           ret.lateralTuning.pid.kiV = [0.05]
           ret.lateralTuning.pid.kf = 0.00004
           break
-
-    elif candidate == CAR.SIENNA:
-      stop_and_go = True
-
-    elif candidate == CAR.LEXUS_CTH:
-      stop_and_go = True
-
-    elif candidate in (CAR.LEXUS_NX, CAR.LEXUS_NX_TSS2):
-      stop_and_go = True
-
-    elif candidate == CAR.MIRAI:
-      stop_and_go = True
 
     ret.centerToFront = ret.wheelbase * 0.44
 
@@ -165,27 +128,47 @@ class CarInterface(CarInterfaceBase):
     ret.minEnableSpeed = -1. if (candidate in STOP_AND_GO_CAR or ret.enableGasInterceptor) else MIN_ACC_SPEED
 
     #DP: cgw long tune :)
-    dp_toyota_enhanced_long_tune = Params().get_bool("dp_toyota_enhanced_long_tune")
-
     tune = ret.longitudinalTuning
-    tune.deadzoneBP = [0., 16., 20., 30.] if dp_toyota_enhanced_long_tune else [0., 9.]
-    tune.deadzoneV =  [0., .03, .06, .15] if dp_toyota_enhanced_long_tune else [.0, .15]
-    if candidate in TSS2_CAR or ret.enableGasInterceptor:
+    if (candidate in TSS2_CAR or ret.enableGasInterceptor) and Params().get_bool("dp_toyota_enhanced_long_tune")
+      tune.deadzoneBP = [0., 16., 20., 30.]
+      tune.deadzoneV = [0., .03, .06, .15]
       tune.kpBP = [0., 5., 20.]
       tune.kpV = [1.3, 1.0, 0.7]
-      tune.kiBP = [ 0.,     2.,    6.,    20.,  27.,  40.] if dp_toyota_enhanced_long_tune else [0., 5., 12., 20., 27.]
-      tune.kiV =  [.35,    .31,   .235,    .195, .10, .01] if dp_toyota_enhanced_long_tune else [.35, .23, .20, .17, .1]
+      tune.kiBP = [ 0.,     2.,    6.,    20.,  27.,  40.]
+      tune.kiV =  [.35,    .31,   .235,    .195, .10, .01]
       if candidate in TSS2_CAR:
-        ret.vEgoStopping = 0.1 if dp_toyota_enhanced_long_tune else 0.25 # car is near 0.1 to 0.2 when car starts requesting stopping accel
-        ret.vEgoStarting = 0.1 if dp_toyota_enhanced_long_tune else 0.25 # needs to be > or == vEgoStopping
-        ret.stopAccel = -0.40  if dp_toyota_enhanced_long_tune else -2.0 # Toyota requests -0.4 when stopped
-        ret.stoppingDecelRate = 0.4 if dp_toyota_enhanced_long_tune else 0.3 # reach stopping target smoothly - seems to take 0.5 seconds to go from 0 to -0.4
+        ret.vEgoStopping = 0.1 # car is near 0.1 to 0.2 when car starts requesting stopping accel
+        ret.vEgoStarting = 0.1 # needs to be > or == vEgoStopping
+        ret.stopAccel = -0.40 # Toyota requests -0.4 when stopped
+        ret.stoppingDecelRate = 0.4 # reach stopping target smoothly - seems to take 0.5 seconds to go from 0 to -0.4
         #ret.longitudinalActuatorDelayLowerBound = 1.5 if dp_toyota_enhanced_long_tune else 1.5
         #ret.longitudinalActuatorDelayUpperBound = 1.5 if dp_toyota_enhanced_long_tune else 1.5
+      else:
+        ret.vEgoStopping = 0.25
+        ret.vEgoStarting = 0.25
+        ret.stopAccel = -2.0
+        ret.stoppingDecelRate = 0.3
+    elif candidate in TSS2_CAR or ret.enableGasInterceptor:
+      tune.deadzoneBP = [0., 16., 20., 30.]
+      tune.deadzoneV = [0., .03, .06, .15]
+      tune.kpBP = [0., 5., 20.]
+      tune.kpV = [1.3, 1.0, 0.7]
+      tune.kiBP = [ 0.,  1.,   2.,   5.,  12., 20., 23., 30.,  40.]
+      tune.kiV =  [.33, .33, .313, .245, .215, .17, .10, .01, .001]
+      if candidate in TSS2_CAR:
+        ret.stopAccel = -0.40
+        ret.stoppingDecelRate = 0.009  # reach stopping target smoothly
+      else:
+        ret.stopAccel = -2.5  # on stock Toyota this is -2.5
+        ret.stoppingDecelRate = 0.3  # This is okay for TSS-P
+      ret.vEgoStarting = 0.1
+      ret.vEgoStopping = 0.1
     else:
+      tune.deadzoneBP = [0., 9.]
+      tune.deadzoneV = [0., .15]
       tune.kpBP = [0., 5., 35.]
-      tune.kiBP = [0., 35.]
       tune.kpV = [3.6, 2.4, 1.5]
+      tune.kiBP = [0., 35.]
       tune.kiV = [0.54, 0.36]
     return ret
 
