@@ -129,7 +129,7 @@ class CarInterface(CarInterfaceBase):
 
     #DP: cgw long tune :)
     tune = ret.longitudinalTuning
-    if (candidate in TSS2_CAR or ret.enableGasInterceptor) and Params().get_bool("dp_toyota_enhanced_long_tune")
+    if (candidate in TSS2_CAR or ret.enableGasInterceptor) and Params().get_bool("dp_toyota_enhanced_long_tune"):
       tune.deadzoneBP = [0., 16., 20., 30.]
       tune.deadzoneV = [0., .03, .06, .15]
       tune.kpBP = [0., 5., 20.]
