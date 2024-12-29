@@ -200,9 +200,9 @@ class CarController(CarControllerBase):
     if self.CP.enableGasInterceptor and CC.longActive and self.CP.carFingerprint not in STOP_AND_GO_CAR:
       MAX_INTERCEPTOR_GAS = 0.5
       # RAV4 has very sensitive gas pedal
-      if self.CP.carFingerprint in (CAR.RAV4, CAR.RAV4H, CAR.HIGHLANDER):
+      if self.CP.carFingerprint == CAR.RAV4:
         PEDAL_SCALE = interp(CS.out.vEgo, [0.0, MIN_ACC_SPEED, MIN_ACC_SPEED + PEDAL_TRANSITION], [0.15, 0.3, 0.0])
-      elif self.CP.carFingerprint in (CAR.COROLLA,):
+      elif self.CP.carFingerprint == CAR.COROLLA:
         PEDAL_SCALE = interp(CS.out.vEgo, [0.0, MIN_ACC_SPEED, MIN_ACC_SPEED + PEDAL_TRANSITION], [0.3, 0.4, 0.0])
       else:
         PEDAL_SCALE = interp(CS.out.vEgo, [0.0, MIN_ACC_SPEED, MIN_ACC_SPEED + PEDAL_TRANSITION], [0.4, 0.5, 0.0])
@@ -211,9 +211,8 @@ class CarController(CarControllerBase):
       pedal_command = PEDAL_SCALE * (actuators.accel + pedal_offset)
       interceptor_gas_cmd = clip(pedal_command, 0., MAX_INTERCEPTOR_GAS)
     # FSRDRCC SnG logic
-    elif ((CC.longActive and actuators.accel > 0.) or (not self.CP.openpilotLongitudinalControl and CS.stock_resume_ready)) \
-      and self.CP.carFingerprint in STOP_AND_GO_CAR and self.CP.enableGasInterceptor and CS.out.vEgo < 1e-3:
-      interceptor_gas_cmd = 0.12
+    elif self.CP.enableGasInterceptor and CC.longActive and self.CP.carFingerprint in STOP_AND_GO_CAR and CC.cruiseControl.resume:
+      interceptor_gas_cmd = 0.14
     else:
       interceptor_gas_cmd = 0.
     pcm_accel_cmd = clip(actuators.accel, self.params.ACCEL_MIN, self.params.ACCEL_MAX)
